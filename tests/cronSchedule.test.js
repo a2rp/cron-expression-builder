@@ -33,6 +33,7 @@ test("describes common schedule presets in plain language", () => {
     assert.equal(describeCronExpression("*/15 * * * *"), "Runs every 15 minutes.");
     assert.equal(describeCronExpression("0 9 * * 1-5"), "Runs Monday through Friday at 09:00.");
     assert.equal(describeCronExpression("0 0 * * *"), "Runs every day at 00:00.");
+    assert.equal(describeCronExpression("5 8 1,15 JAN-MAR MON-FRI"), "Runs at minute 5 during hour 8 on day 1st and 15th or weekdays Monday through Friday in January through March.");
 });
 
 test("rejects invalid field counts, ranges, and zero steps", () => {

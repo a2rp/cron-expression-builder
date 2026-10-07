@@ -111,7 +111,7 @@ export const getUpcomingRuns = (expression, fromDate = new Date(), limit = 5, ho
     return occurrences;
 };
 
-const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthLabels = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const weekdayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const formatFieldValue = (rawValue, fieldIndex) => {
@@ -126,7 +126,36 @@ const formatFieldValue = (rawValue, fieldIndex) => {
     return rawValue;
 };
 
-const formatList = (items) => items.length === 1 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+const formatList = (items) => items.length === 1 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+
+const ordinal = (value) => {
+    const remainder = value % 100;
+    const suffix = remainder >= 11 && remainder <= 13 ? "th" : value % 10 === 1 ? "st" : value % 10 === 2 ? "nd" : value % 10 === 3 ? "rd" : "th";
+    return `${value}${suffix}`;
+};
+
+const describeFieldValues = (expression, fieldIndex) => {
+    const units = ["minute", "hour", "day", "month", "weekday"];
+    if (expression === "*") return ["every minute", "every hour", "any day", "every month", "any weekday"][fieldIndex];
+
+    return formatList(expression.split(",").map((item) => {
+        const stepParts = item.split("/");
+        if (stepParts.length === 2) {
+            const step = stepParts[1];
+            const unit = step === "1" ? units[fieldIndex] : `${units[fieldIndex]}s`;
+            if (stepParts[0] === "*") return `every ${step} ${unit}`;
+            return `every ${step} ${unit} from ${describeFieldValues(stepParts[0], fieldIndex)}`;
+        }
+
+        if (item.includes("-")) {
+            const [start, end] = item.split("-");
+            return `${formatFieldValue(start, fieldIndex)} through ${formatFieldValue(end, fieldIndex)}`;
+        }
+
+        const value = formatFieldValue(item, fieldIndex);
+        return fieldIndex === 2 && /^\d+$/.test(item) ? ordinal(Number(item)) : value;
+    }));
+};
 
 const formatTime = (hour, minute) => `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
 
@@ -146,12 +175,25 @@ export const describeCronExpression = (expression) => {
         if (day !== "*" && month === "*" && weekday === "*") return `Runs on day ${day} of every month at ${time}.`;
     }
 
-    const minuteDescription = minute === "*" ? "every minute" : `minute ${minute.replaceAll(",", ", ")}`;
-    const hourDescription = hour === "*" ? "every hour" : `hour ${hour.replaceAll(",", ", ")}`;
-    const dayDescription = day === "*" ? "every day of the month" : `day ${day.replaceAll(",", ", ")} of the month`;
-    const monthDescription = month === "*" ? "every month" : formatList(month.split(",").map((item) => formatFieldValue(item, 3)));
-    const weekdayDescription = weekday === "*" ? "every weekday" : formatList(weekday.split(",").map((item) => formatFieldValue(item, 4)));
-    return `Runs at ${minuteDescription} of ${hourDescription}, on ${dayDescription}, in ${monthDescription}, and on ${weekdayDescription}.`;
+    let timeDescription;
+    if (minute === "*" && hour === "*") timeDescription = "every minute";
+    else if (minute === "*") timeDescription = `every minute during ${describeFieldValues(hour, 1)}`;
+    else if (hour === "*") timeDescription = `at minute ${describeFieldValues(minute, 0)} of every hour`;
+    else timeDescription = `at minute ${describeFieldValues(minute, 0)} during hour ${describeFieldValues(hour, 1)}`;
+
+    const dayDescriptions = [];
+    if (day !== "*") dayDescriptions.push(`day ${describeFieldValues(day, 2)}`);
+    if (weekday !== "*") {
+        const isWeekdayList = weekday.includes(",") || weekday.includes("-");
+        dayDescriptions.push(`${isWeekdayList ? "weekdays" : "weekday"} ${describeFieldValues(weekday, 4)}`);
+    }
+
+    const calendarParts = [];
+    if (dayDescriptions.length === 2) calendarParts.push(`on ${dayDescriptions[0]} or ${dayDescriptions[1]}`);
+    else if (dayDescriptions.length === 1) calendarParts.push(`on ${dayDescriptions[0]}`);
+    if (month !== "*") calendarParts.push(`in ${describeFieldValues(month, 3)}`);
+
+    return `Runs ${timeDescription}${calendarParts.length ? ` ${calendarParts.join(" ")}` : " every day"}.`;
 };
 
 export const cronFieldDefinitions = fieldDefinitions.map(({ label, min, max }) => ({ label, min, max }));
