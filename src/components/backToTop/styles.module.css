@@ -12,7 +12,9 @@
     background: var(--navy);
     box-shadow: 0 5px 16px rgb(18 37 33 / 22%);
     color: var(--lime);
-    transition: border-color 130ms ease, box-shadow 130ms ease;
+    transition:
+        border-color 130ms ease,
+        box-shadow 130ms ease;
 
     svg {
         width: 17px;
@@ -21,7 +23,9 @@
 
     &:hover {
         border-color: #8fa971;
-        box-shadow: 0 0 0 3px rgb(198 220 121 / 18%), 0 5px 16px rgb(18 37 33 / 22%);
+        box-shadow:
+            0 0 0 3px rgb(198 220 121 / 18%),
+            0 5px 16px rgb(18 37 33 / 22%);
     }
 
     &:focus-visible {

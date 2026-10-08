@@ -140,7 +140,9 @@
             border-radius: 6px;
             background: #223530;
             color: #d4e2cf;
-            transition: border-color 130ms ease, box-shadow 130ms ease;
+            transition:
+                border-color 130ms ease,
+                box-shadow 130ms ease;
 
             svg {
                 width: 15px;
@@ -361,7 +363,9 @@
                 padding: 6px 8px;
                 color: #48574e;
                 text-align: left;
-                transition: border-color 130ms ease, box-shadow 130ms ease;
+                transition:
+                    border-color 130ms ease,
+                    box-shadow 130ms ease;
 
                 > span {
                     color: #4c594f;

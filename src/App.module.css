@@ -19,7 +19,12 @@
         margin-bottom: 18px;
         border: 1px solid #dcded7;
         border-radius: 13px;
-        background: linear-gradient(112deg, #e9eee6 0%, #f5f3ec 67%, #f5e9de 100%);
+        background: linear-gradient(
+            112deg,
+            #e9eee6 0%,
+            #f5f3ec 67%,
+            #f5e9de 100%
+        );
         padding: 23px 30px;
 
         .introCopy {

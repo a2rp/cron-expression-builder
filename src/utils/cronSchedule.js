@@ -1,23 +1,54 @@
-const monthNames = new Map(["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"].map((name, index) => [name, index + 1]));
-const weekdayNames = new Map(["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((name, index) => [name, index]));
+const monthNames = new Map(
+    [
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC",
+    ].map((name, index) => [name, index + 1]),
+);
+const weekdayNames = new Map(
+    ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((name, index) => [
+        name,
+        index,
+    ]),
+);
 
 const fieldDefinitions = [
     { label: "Minute", min: 0, max: 59 },
     { label: "Hour", min: 0, max: 23 },
     { label: "Day of month", min: 1, max: 31 },
     { label: "Month", min: 1, max: 12, names: monthNames },
-    { label: "Day of week", min: 0, max: 7, names: weekdayNames, sundayAlias: true },
+    {
+        label: "Day of week",
+        min: 0,
+        max: 7,
+        names: weekdayNames,
+        sundayAlias: true,
+    },
 ];
 
 const parseValue = (value, definition) => {
     const normalized = value.toUpperCase();
     const namedValue = definition.names?.get(normalized);
     if (namedValue !== undefined) return namedValue;
-    if (!/^\d+$/.test(value)) throw new Error(`${definition.label} contains an invalid value: ${value}.`);
+    if (!/^\d+$/.test(value))
+        throw new Error(
+            `${definition.label} contains an invalid value: ${value}.`,
+        );
 
     const number = Number(value);
     if (number < definition.min || number > definition.max) {
-        throw new Error(`${definition.label} values must be from ${definition.min} to ${definition.max}${definition.sundayAlias ? " (7 also means Sunday)" : ""}.`);
+        throw new Error(
+            `${definition.label} values must be from ${definition.min} to ${definition.max}${definition.sundayAlias ? " (7 also means Sunday)" : ""}.`,
+        );
     }
     return number;
 };
@@ -33,14 +64,20 @@ export const parseCronField = (expression, definition) => {
     const segments = value.split(",");
 
     for (const segment of segments) {
-        if (!segment) throw new Error(`${definition.label} has an empty list item.`);
+        if (!segment)
+            throw new Error(`${definition.label} has an empty list item.`);
         const stepParts = segment.split("/");
         if (stepParts.length > 2 || stepParts.some((part) => !part)) {
-            throw new Error(`${definition.label} has an invalid step expression.`);
+            throw new Error(
+                `${definition.label} has an invalid step expression.`,
+            );
         }
 
         const step = stepParts.length === 2 ? Number(stepParts[1]) : 1;
-        if (!Number.isInteger(step) || step < 1) throw new Error(`${definition.label} steps must be positive whole numbers.`);
+        if (!Number.isInteger(step) || step < 1)
+            throw new Error(
+                `${definition.label} steps must be positive whole numbers.`,
+            );
 
         const base = stepParts[0];
         let start;
@@ -56,13 +93,17 @@ export const parseCronField = (expression, definition) => {
             }
             start = parseValue(rangeParts[0], definition);
             end = parseValue(rangeParts[1], definition);
-            if (end < start) throw new Error(`${definition.label} ranges must go from the smaller value to the larger value.`);
+            if (end < start)
+                throw new Error(
+                    `${definition.label} ranges must go from the smaller value to the larger value.`,
+                );
         } else {
             start = parseValue(base, definition);
             end = stepParts.length === 2 ? definition.max : start;
         }
 
-        for (let current = start; current <= end; current += step) addFieldValue(values, current, definition);
+        for (let current = start; current <= end; current += step)
+            addFieldValue(values, current, definition);
     }
 
     return { values, wildcard: value === "*" };
@@ -70,15 +111,25 @@ export const parseCronField = (expression, definition) => {
 
 export const parseCronExpression = (expression) => {
     const tokens = expression.trim().split(/\s+/).filter(Boolean);
-    if (tokens.length !== 5) throw new Error("A cron expression must contain five fields: minute, hour, day, month, and weekday.");
+    if (tokens.length !== 5)
+        throw new Error(
+            "A cron expression must contain five fields: minute, hour, day, month, and weekday.",
+        );
 
-    const fields = tokens.map((token, index) => parseCronField(token, fieldDefinitions[index]));
+    const fields = tokens.map((token, index) =>
+        parseCronField(token, fieldDefinitions[index]),
+    );
     return { tokens, fields };
 };
 
 const matchesDate = (date, tokens, fields) => {
     const [minute, hour, dayOfMonth, month, dayOfWeek] = fields;
-    if (!minute.values.has(date.getMinutes()) || !hour.values.has(date.getHours()) || !month.values.has(date.getMonth() + 1)) return false;
+    if (
+        !minute.values.has(date.getMinutes()) ||
+        !hour.values.has(date.getHours()) ||
+        !month.values.has(date.getMonth() + 1)
+    )
+        return false;
 
     const matchesDayOfMonth = dayOfMonth.values.has(date.getDate());
     const matchesDayOfWeek = dayOfWeek.values.has(date.getDay());
@@ -91,10 +142,18 @@ const matchesDate = (date, tokens, fields) => {
     return matchesDayOfMonth || matchesDayOfWeek;
 };
 
-export const getUpcomingRuns = (expression, fromDate = new Date(), limit = 5, horizonDays = 366) => {
-    if (!(fromDate instanceof Date) || Number.isNaN(fromDate.getTime())) throw new Error("Choose a valid starting date.");
-    if (!Number.isInteger(limit) || limit < 1 || limit > 10) throw new Error("Preview between one and ten upcoming runs.");
-    if (!Number.isInteger(horizonDays) || horizonDays < 1 || horizonDays > 366) throw new Error("The preview window must be from one to 366 days.");
+export const getUpcomingRuns = (
+    expression,
+    fromDate = new Date(),
+    limit = 5,
+    horizonDays = 366,
+) => {
+    if (!(fromDate instanceof Date) || Number.isNaN(fromDate.getTime()))
+        throw new Error("Choose a valid starting date.");
+    if (!Number.isInteger(limit) || limit < 1 || limit > 10)
+        throw new Error("Preview between one and ten upcoming runs.");
+    if (!Number.isInteger(horizonDays) || horizonDays < 1 || horizonDays > 366)
+        throw new Error("The preview window must be from one to 366 days.");
 
     const { tokens, fields } = parseCronExpression(expression);
     const candidate = new Date(fromDate);
@@ -103,61 +162,115 @@ export const getUpcomingRuns = (expression, fromDate = new Date(), limit = 5, ho
     const maxMinutes = horizonDays * 24 * 60;
     const occurrences = [];
 
-    for (let index = 0; index < maxMinutes && occurrences.length < limit; index += 1) {
-        if (matchesDate(candidate, tokens, fields)) occurrences.push(new Date(candidate));
+    for (
+        let index = 0;
+        index < maxMinutes && occurrences.length < limit;
+        index += 1
+    ) {
+        if (matchesDate(candidate, tokens, fields))
+            occurrences.push(new Date(candidate));
         candidate.setMinutes(candidate.getMinutes() + 1);
     }
 
     return occurrences;
 };
 
-const monthLabels = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const weekdayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const monthLabels = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+];
+const weekdayLabels = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+];
 
 const formatFieldValue = (rawValue, fieldIndex) => {
     const numericValue = Number(rawValue);
     if (!Number.isInteger(numericValue)) {
-        if (fieldIndex === 3 && monthNames.has(rawValue.toUpperCase())) return monthLabels[monthNames.get(rawValue.toUpperCase()) - 1];
-        if (fieldIndex === 4 && weekdayNames.has(rawValue.toUpperCase())) return weekdayLabels[weekdayNames.get(rawValue.toUpperCase())];
+        if (fieldIndex === 3 && monthNames.has(rawValue.toUpperCase()))
+            return monthLabels[monthNames.get(rawValue.toUpperCase()) - 1];
+        if (fieldIndex === 4 && weekdayNames.has(rawValue.toUpperCase()))
+            return weekdayLabels[weekdayNames.get(rawValue.toUpperCase())];
         return rawValue;
     }
     if (fieldIndex === 3) return monthLabels[numericValue - 1] ?? rawValue;
-    if (fieldIndex === 4) return weekdayLabels[numericValue === 7 ? 0 : numericValue] ?? rawValue;
+    if (fieldIndex === 4)
+        return weekdayLabels[numericValue === 7 ? 0 : numericValue] ?? rawValue;
     return rawValue;
 };
 
-const formatList = (items) => items.length === 1 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+const formatList = (items) =>
+    items.length === 1
+        ? items[0]
+        : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 
 const ordinal = (value) => {
     const remainder = value % 100;
-    const suffix = remainder >= 11 && remainder <= 13 ? "th" : value % 10 === 1 ? "st" : value % 10 === 2 ? "nd" : value % 10 === 3 ? "rd" : "th";
+    const suffix =
+        remainder >= 11 && remainder <= 13
+            ? "th"
+            : value % 10 === 1
+              ? "st"
+              : value % 10 === 2
+                ? "nd"
+                : value % 10 === 3
+                  ? "rd"
+                  : "th";
     return `${value}${suffix}`;
 };
 
 const describeFieldValues = (expression, fieldIndex) => {
     const units = ["minute", "hour", "day", "month", "weekday"];
-    if (expression === "*") return ["every minute", "every hour", "any day", "every month", "any weekday"][fieldIndex];
+    if (expression === "*")
+        return [
+            "every minute",
+            "every hour",
+            "any day",
+            "every month",
+            "any weekday",
+        ][fieldIndex];
 
-    return formatList(expression.split(",").map((item) => {
-        const stepParts = item.split("/");
-        if (stepParts.length === 2) {
-            const step = stepParts[1];
-            const unit = step === "1" ? units[fieldIndex] : `${units[fieldIndex]}s`;
-            if (stepParts[0] === "*") return `every ${step} ${unit}`;
-            return `every ${step} ${unit} from ${describeFieldValues(stepParts[0], fieldIndex)}`;
-        }
+    return formatList(
+        expression.split(",").map((item) => {
+            const stepParts = item.split("/");
+            if (stepParts.length === 2) {
+                const step = stepParts[1];
+                const unit =
+                    step === "1" ? units[fieldIndex] : `${units[fieldIndex]}s`;
+                if (stepParts[0] === "*") return `every ${step} ${unit}`;
+                return `every ${step} ${unit} from ${describeFieldValues(stepParts[0], fieldIndex)}`;
+            }
 
-        if (item.includes("-")) {
-            const [start, end] = item.split("-");
-            return `${formatFieldValue(start, fieldIndex)} through ${formatFieldValue(end, fieldIndex)}`;
-        }
+            if (item.includes("-")) {
+                const [start, end] = item.split("-");
+                return `${formatFieldValue(start, fieldIndex)} through ${formatFieldValue(end, fieldIndex)}`;
+            }
 
-        const value = formatFieldValue(item, fieldIndex);
-        return fieldIndex === 2 && /^\d+$/.test(item) ? ordinal(Number(item)) : value;
-    }));
+            const value = formatFieldValue(item, fieldIndex);
+            return fieldIndex === 2 && /^\d+$/.test(item)
+                ? ordinal(Number(item))
+                : value;
+        }),
+    );
 };
 
-const formatTime = (hour, minute) => `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+const formatTime = (hour, minute) =>
+    `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
 
 export const describeCronExpression = (expression) => {
     const { tokens } = parseCronExpression(expression);
@@ -165,35 +278,50 @@ export const describeCronExpression = (expression) => {
     const everyDay = day === "*" && month === "*" && weekday === "*";
 
     if (tokens.every((token) => token === "*")) return "Runs every minute.";
-    if (/^\*\/\d+$/.test(minute) && hour === "*" && everyDay) return `Runs every ${minute.split("/")[1]} minutes.`;
-    if (minute === "0" && hour === "*" && everyDay) return "Runs at the start of every hour.";
+    if (/^\*\/\d+$/.test(minute) && hour === "*" && everyDay)
+        return `Runs every ${minute.split("/")[1]} minutes.`;
+    if (minute === "0" && hour === "*" && everyDay)
+        return "Runs at the start of every hour.";
     if (/^\d+$/.test(minute) && /^\d+$/.test(hour)) {
         const time = formatTime(hour, minute);
         if (everyDay) return `Runs every day at ${time}.`;
-        if (day === "*" && month === "*" && weekday === "1-5") return `Runs Monday through Friday at ${time}.`;
-        if (day === "*" && month === "*" && /^\d$/.test(weekday)) return `Runs every ${formatFieldValue(weekday, 4)} at ${time}.`;
-        if (day !== "*" && month === "*" && weekday === "*") return `Runs on day ${day} of every month at ${time}.`;
+        if (day === "*" && month === "*" && weekday === "1-5")
+            return `Runs Monday through Friday at ${time}.`;
+        if (day === "*" && month === "*" && /^\d$/.test(weekday))
+            return `Runs every ${formatFieldValue(weekday, 4)} at ${time}.`;
+        if (day !== "*" && month === "*" && weekday === "*")
+            return `Runs on day ${day} of every month at ${time}.`;
     }
 
     let timeDescription;
     if (minute === "*" && hour === "*") timeDescription = "every minute";
-    else if (minute === "*") timeDescription = `every minute during ${describeFieldValues(hour, 1)}`;
-    else if (hour === "*") timeDescription = `at minute ${describeFieldValues(minute, 0)} of every hour`;
-    else timeDescription = `at minute ${describeFieldValues(minute, 0)} during hour ${describeFieldValues(hour, 1)}`;
+    else if (minute === "*")
+        timeDescription = `every minute during ${describeFieldValues(hour, 1)}`;
+    else if (hour === "*")
+        timeDescription = `at minute ${describeFieldValues(minute, 0)} of every hour`;
+    else
+        timeDescription = `at minute ${describeFieldValues(minute, 0)} during hour ${describeFieldValues(hour, 1)}`;
 
     const dayDescriptions = [];
     if (day !== "*") dayDescriptions.push(`day ${describeFieldValues(day, 2)}`);
     if (weekday !== "*") {
         const isWeekdayList = weekday.includes(",") || weekday.includes("-");
-        dayDescriptions.push(`${isWeekdayList ? "weekdays" : "weekday"} ${describeFieldValues(weekday, 4)}`);
+        dayDescriptions.push(
+            `${isWeekdayList ? "weekdays" : "weekday"} ${describeFieldValues(weekday, 4)}`,
+        );
     }
 
     const calendarParts = [];
-    if (dayDescriptions.length === 2) calendarParts.push(`on ${dayDescriptions[0]} or ${dayDescriptions[1]}`);
-    else if (dayDescriptions.length === 1) calendarParts.push(`on ${dayDescriptions[0]}`);
-    if (month !== "*") calendarParts.push(`in ${describeFieldValues(month, 3)}`);
+    if (dayDescriptions.length === 2)
+        calendarParts.push(`on ${dayDescriptions[0]} or ${dayDescriptions[1]}`);
+    else if (dayDescriptions.length === 1)
+        calendarParts.push(`on ${dayDescriptions[0]}`);
+    if (month !== "*")
+        calendarParts.push(`in ${describeFieldValues(month, 3)}`);
 
     return `Runs ${timeDescription}${calendarParts.length ? ` ${calendarParts.join(" ")}` : " every day"}.`;
 };
 
-export const cronFieldDefinitions = fieldDefinitions.map(({ label, min, max }) => ({ label, min, max }));
+export const cronFieldDefinitions = fieldDefinitions.map(
+    ({ label, min, max }) => ({ label, min, max }),
+);

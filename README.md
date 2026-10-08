@@ -16,13 +16,13 @@ When the expression is valid, the builder shows a short explanation and the prev
 
 The expression has five space-separated fields, in this order:
 
-| Field | Accepted values | Example |
-| --- | --- | --- |
-| Minute | 0 to 59 | `*/15` |
-| Hour | 0 to 23 | `9` |
-| Day of month | 1 to 31 | `1,15` |
-| Month | 1 to 12 or JAN to DEC | `JAN,MAR` |
-| Day of week | 0 to 7 or SUN to SAT | `MON-FRI` |
+| Field        | Accepted values       | Example   |
+| ------------ | --------------------- | --------- |
+| Minute       | 0 to 59               | `*/15`    |
+| Hour         | 0 to 23               | `9`       |
+| Day of month | 1 to 31               | `1,15`    |
+| Month        | 1 to 12 or JAN to DEC | `JAN,MAR` |
+| Day of week  | 0 to 7 or SUN to SAT  | `MON-FRI` |
 
 The supported operators are `*` for all values, commas for lists, ascending hyphen ranges, and `/` for steps. For example, `*/15 9-17 * JAN,MAR MON-FRI` runs every 15 minutes from 9 AM through 5 PM on weekdays in January and March. Month and weekday names are case-insensitive. Both `0` and `7` mean Sunday.
 

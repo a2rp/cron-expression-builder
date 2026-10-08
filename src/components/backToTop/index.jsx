@@ -14,7 +14,16 @@ const BackToTop = () => {
 
     if (!visible) return null;
 
-    return <button className={styles.backToTop} type="button" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><LuArrowUp aria-hidden="true" /></button>;
+    return (
+        <button
+            className={styles.backToTop}
+            type="button"
+            aria-label="Back to top"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+            <LuArrowUp aria-hidden="true" />
+        </button>
+    );
 };
 
 export default BackToTop;
