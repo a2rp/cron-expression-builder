@@ -270,7 +270,7 @@ const describeFieldValues = (expression, fieldIndex) => {
 };
 
 const formatTime = (hour, minute) =>
-    `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+    `${String(Number(hour)).padStart(2, "0")}:${String(Number(minute)).padStart(2, "0")}`;
 
 export const describeCronExpression = (expression) => {
     const { tokens } = parseCronExpression(expression);
@@ -305,9 +305,11 @@ export const describeCronExpression = (expression) => {
     const dayDescriptions = [];
     if (day !== "*") dayDescriptions.push(`day ${describeFieldValues(day, 2)}`);
     if (weekday !== "*") {
-        const isWeekdayList = weekday.includes(",") || weekday.includes("-");
+        const weekdayText = ["1-5", "MON-FRI"].includes(weekday.toUpperCase())
+            ? "weekdays"
+            : `day${weekday.includes(",") || weekday.includes("-") ? "s" : ""} of the week`;
         dayDescriptions.push(
-            `${isWeekdayList ? "weekdays" : "weekday"} ${describeFieldValues(weekday, 4)}`,
+            `${weekdayText} ${describeFieldValues(weekday, 4)}`,
         );
     }
 
