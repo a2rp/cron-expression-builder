@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LuCalendarDays, LuClock, LuGlobe } from "react-icons/lu";
 import {
     getUpcomingRuns,
@@ -20,17 +20,29 @@ const localTimeZone =
     Intl.DateTimeFormat().resolvedOptions().timeZone || "local time";
 
 const UpcomingRuns = ({ expression }) => {
+    const [referenceDate, setReferenceDate] = useState(() => new Date());
     const schedule = useMemo(() => {
         try {
             parseCronExpression(expression);
             return {
-                runs: getUpcomingRuns(expression, new Date(), 5),
+                runs: getUpcomingRuns(expression, referenceDate, 5),
                 error: "",
             };
         } catch (error) {
             return { runs: [], error: error.message };
         }
-    }, [expression]);
+    }, [expression, referenceDate]);
+
+    useEffect(() => {
+        const nextRun = schedule.runs[0];
+        if (!nextRun) return undefined;
+
+        const timeout = window.setTimeout(
+            () => setReferenceDate(new Date()),
+            Math.max(1, nextRun.getTime() - Date.now() + 1000),
+        );
+        return () => window.clearTimeout(timeout);
+    }, [schedule.runs]);
 
     return (
         <section

@@ -10,7 +10,7 @@ Build a five-field cron expression, check its syntax as you edit, read a plain-l
 
 Choose one of the quick schedules or edit the five fields directly. You can also type or paste a complete expression into the main expression box. The field controls and expression box stay in sync. Copy the valid expression with the copy button beside it.
 
-When the expression is valid, the builder shows a short explanation and the preview lists the next five occurrences. If the expression is invalid, an inline message identifies the problem and the preview waits for a valid schedule. The preview searches up to 366 days ahead. When no occurrence is found during that period, it explains that limit.
+When the expression is valid, the builder shows a short explanation and the preview lists the next five occurrences. It rolls forward after each upcoming run while the page remains open. If the expression is invalid, an inline message identifies the problem and the preview waits for a valid schedule. The preview searches up to 366 days ahead. When no occurrence is found during that period, it explains that limit.
 
 ## Cron field order
 
